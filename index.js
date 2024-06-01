@@ -9,10 +9,7 @@ const app = express();
 app.use(bodyParser.json());
 
 const dbURI = process.env.MONGODB_URI || 'mongodb+srv://RadhaDarshan:Jagadeesan%23786@mentor-student-database.iqhjlhc.mongodb.net/?retryWrites=true&w=majority';
-mongoose.connect(dbURI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-});
+mongoose.connect(dbURI);
 
 const endpoints = [
     { method: 'POST', path: '/mentors', description: 'Create a new mentor' },
