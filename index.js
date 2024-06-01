@@ -21,7 +21,6 @@ const endpoints = [
     { method: 'GET', path: '/students/:studentId/previous-mentor', description: 'Show the previous mentor for a particular student' }
 ];
 
-
 app.get('/', (req, res) => {
     res.send({
         message: 'Server is running successfully',
@@ -29,12 +28,11 @@ app.get('/', (req, res) => {
     });
 });
 
-
 // Function to find the next available ID for mentors
 async function getNextMentorId() {
-    const mentor = await Mentor.findOne().sort({ _id: -1 });
+    const mentor = await Mentor.findOne().sort({ mentor_id: -1 });
     if (mentor) {
-        return parseInt(mentor._id) + 1;
+        return parseInt(mentor.mentor_id) + 1;
     } else {
         return 1; // Start from 1 if no mentors exist
     }
@@ -42,9 +40,9 @@ async function getNextMentorId() {
 
 // Function to find the next available ID for students
 async function getNextStudentId() {
-    const student = await Student.findOne().sort({ _id: -1 });
+    const student = await Student.findOne().sort({ student_id: -1 });
     if (student) {
-        return parseInt(student._id) + 1;
+        return parseInt(student.student_id) + 1;
     } else {
         return 1; // Start from 1 if no students exist
     }
@@ -54,7 +52,7 @@ async function getNextStudentId() {
 app.post('/mentors', async (req, res) => {
     const mentorData = req.body;
     const mentorId = await getNextMentorId();
-    const mentor = new Mentor({ ...mentorData, _id: mentorId.toString() });
+    const mentor = new Mentor({ ...mentorData, mentor_id: mentorId.toString() });
     await mentor.save();
     res.status(201).send(mentor);
 });
@@ -63,15 +61,16 @@ app.post('/mentors', async (req, res) => {
 app.post('/students', async (req, res) => {
     const studentData = req.body;
     const studentId = await getNextStudentId();
-    const student = new Student({ ...studentData, _id: studentId.toString() });
+    const student = new Student({ ...studentData, student_id: studentId.toString() });
     await student.save();
     res.status(201).send(student);
 });
+
 // Assign a student to a mentor
 app.post('/mentors/:mentorId/students/:studentId', async (req, res) => {
     const { mentorId, studentId } = req.params;
-    const mentor = await Mentor.findById(mentorId);
-    const student = await Student.findById(studentId);
+    const mentor = await Mentor.findOne({ mentor_id: mentorId });
+    const student = await Student.findOne({ student_id: studentId });
 
     if (student.mentor) {
         student.previousMentor = student.mentor;
@@ -91,10 +90,10 @@ app.post('/mentors/:mentorId/students', async (req, res) => {
     const { mentorId } = req.params;
     const { studentIds } = req.body; // Array of student IDs
 
-    const mentor = await Mentor.findById(mentorId);
+    const mentor = await Mentor.findOne({ mentor_id: mentorId });
 
     for (const studentId of studentIds) {
-        const student = await Student.findById(studentId);
+        const student = await Student.findOne({ student_id: studentId });
 
         if (student.mentor) {
             student.previousMentor = student.mentor;
@@ -114,8 +113,8 @@ app.post('/mentors/:mentorId/students', async (req, res) => {
 // Assign or change mentor for a student
 app.put('/students/:studentId/mentor/:mentorId', async (req, res) => {
     const { studentId, mentorId } = req.params;
-    const student = await Student.findById(studentId);
-    const newMentor = await Mentor.findById(mentorId);
+    const student = await Student.findOne({ student_id: studentId });
+    const newMentor = await Mentor.findOne({ mentor_id: mentorId });
 
     if (student.mentor) {
         student.previousMentor = student.mentor;
@@ -133,14 +132,14 @@ app.put('/students/:studentId/mentor/:mentorId', async (req, res) => {
 // Show all students for a particular mentor
 app.get('/mentors/:mentorId/students', async (req, res) => {
     const { mentorId } = req.params;
-    const mentor = await Mentor.findById(mentorId).populate('students');
+    const mentor = await Mentor.findOne({ mentor_id: mentorId }).populate('students');
     res.send(mentor.students);
 });
 
 // Show the previous mentor for a particular student
 app.get('/students/:studentId/previous-mentor', async (req, res) => {
     const { studentId } = req.params;
-    const student = await Student.findById(studentId).populate('previousMentor');
+    const student = await Student.findOne({ student_id: studentId }).populate('previousMentor');
     res.send(student.previousMentor);
 });
 

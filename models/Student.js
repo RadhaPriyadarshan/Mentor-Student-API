@@ -7,11 +7,18 @@ const studentSchema = new mongoose.Schema({
     },
     mentor: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Mentor'
+        ref: 'Mentor',
+        default: null
     },
     previousMentor: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Mentor'
+        ref: 'Mentor',
+        default: null
+    },
+    student_id: {
+        type: String,
+        required: true,
+        unique: true
     }
 });
 
