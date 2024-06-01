@@ -29,20 +29,44 @@ app.get('/', (req, res) => {
     });
 });
 
-// Create a new mentor
+
+// Function to find the next available ID for mentors
+async function getNextMentorId() {
+    const mentor = await Mentor.findOne().sort({ _id: -1 });
+    if (mentor) {
+        return parseInt(mentor._id) + 1;
+    } else {
+        return 1; // Start from 1 if no mentors exist
+    }
+}
+
+// Function to find the next available ID for students
+async function getNextStudentId() {
+    const student = await Student.findOne().sort({ _id: -1 });
+    if (student) {
+        return parseInt(student._id) + 1;
+    } else {
+        return 1; // Start from 1 if no students exist
+    }
+}
+
+// Create a new mentor with custom ID
 app.post('/mentors', async (req, res) => {
-    const mentor = new Mentor(req.body);
+    const mentorData = req.body;
+    const mentorId = await getNextMentorId();
+    const mentor = new Mentor({ ...mentorData, _id: mentorId.toString() });
     await mentor.save();
     res.status(201).send(mentor);
 });
 
-// Create a new student
+// Create a new student with custom ID
 app.post('/students', async (req, res) => {
-    const student = new Student(req.body);
+    const studentData = req.body;
+    const studentId = await getNextStudentId();
+    const student = new Student({ ...studentData, _id: studentId.toString() });
     await student.save();
     res.status(201).send(student);
 });
-
 // Assign a student to a mentor
 app.post('/mentors/:mentorId/students/:studentId', async (req, res) => {
     const { mentorId, studentId } = req.params;
