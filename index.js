@@ -11,7 +11,7 @@ app.use(bodyParser.json());
 app.use(cors());
 
 const dbURI = process.env.MONGODB_URI || 'mongodb+srv://RadhaDarshan:Jagadeesan%23786@mentor-student-database.iqhjlhc.mongodb.net/student_mentor_database?retryWrites=true&w=majority';
-mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(dbURI)
     .then(() => console.log('MongoDB connected'))
     .catch(err => console.error('MongoDB connection error:', err));
 
@@ -22,7 +22,9 @@ const endpoints = [
     { method: 'POST', path: '/mentors/:mentorId/students', description: 'Assign multiple students to a mentor' },
     { method: 'PUT', path: '/students/:studentId/mentor/:mentorId', description: 'Assign or change mentor for a student' },
     { method: 'GET', path: '/mentors/:mentorId/students', description: 'Show all students for a particular mentor' },
-    { method: 'GET', path: '/students/:studentId/previous-mentor', description: 'Show the previous mentor for a particular student' }
+    { method: 'GET', path: '/students/:studentId/previous-mentor', description: 'Show the previous mentor for a particular student' },
+    { method: 'GET', path: '/mentors', description: 'Get all mentors' },
+    { method: 'GET', path: '/students', description: 'Get all students' }
 ];
 
 app.get('/', (req, res) => {
@@ -124,7 +126,7 @@ app.post('/mentors/:mentorId/students', async (req, res) => {
 
         await mentor.save();
 
-        res.send(mentor);
+        res.send(entor);
     } catch (error) {
         res.status(500).send({ error: error.message });
     }
@@ -170,6 +172,26 @@ app.get('/students/:studentId/previous-mentor', async (req, res) => {
         const { studentId } = req.params;
         const student = await Student.findOne({ student_id: studentId }).populate('previousMentor');
         res.send(student.previousMentor);
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+    }
+});
+
+// Get all mentors
+app.get('/mentors', async (req, res) => {
+    try {
+        const mentors = await Mentor.find();
+        res.send(mentors);
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+    }
+});
+
+// Get all students
+app.get('/students', async (req, res) => {
+    try {
+        const students = await Student.find();
+        res.send(students);
     } catch (error) {
         res.status(500).send({ error: error.message });
     }
