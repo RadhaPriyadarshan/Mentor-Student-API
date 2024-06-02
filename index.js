@@ -8,7 +8,7 @@ const Student = require('./models/Student');
 const app = express();
 app.use(bodyParser.json());
 
-const dbURI = process.env.MONGODB_URI || 'mongodb+srv://RadhaDarshan:Jagadeesan%23786@mentor-student-database.iqhjlhc.mongodb.net/mentor-student-db?retryWrites=true&w=majority';
+const dbURI = process.env.MONGODB_URI || 'mongodb+srv://RadhaDarshan:Jagadeesan%23786@mentor-student-database.iqhjlhc.mongodb.net/?retryWrites=true&w=majority';
 mongoose.connect(dbURI);
 
 const endpoints = [
