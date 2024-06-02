@@ -1,19 +1,17 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-const cors = require('cors');
 
 const Mentor = require('./models/Mentor');
 const Student = require('./models/Student');
 
 const app = express();
 app.use(bodyParser.json());
-app.use(cors());
 
-const dbURI = process.env.MONGODB_URI || 'mongodb+srv://RadhaDarshan:Jagadeesan%23786@mentor-student-database.iqhjlhc.mongodb.net/student_mentor_database?retryWrites=true&w=majority';
-mongoose.connect(dbURI)
+const dbURI = 'mongodb+srv://RadhaDarshan:Jagadeesan%23786@mentor-student-database.iqhjlhc.mongodb.net/student_mentor_database?retryWrites=true&w=majority';
+mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('MongoDB connected'))
-    .catch(err => console.error('MongoDB connection error:', err));
+    .catch(err => console.log(err));
 
 const endpoints = [
     { method: 'POST', path: '/mentors', description: 'Create a new mentor' },
@@ -87,14 +85,18 @@ app.post('/mentors/:mentorId/students/:studentId', async (req, res) => {
         const mentor = await Mentor.findOne({ mentor_id: mentorId });
         const student = await Student.findOne({ student_id: studentId });
 
-        if (student && student.mentor) {
+        if (!mentor || !student) {
+            return res.status(404).send({ error: 'Mentor or student not found' });
+        }
+
+        if (student.mentor) {
             student.previousMentor = student.mentor;
         }
 
-        student.mentor = mentor;
+        student.mentor = mentor._id;
         await student.save();
 
-        mentor.students.push(student);
+        mentor.students.push(student._id);
         await mentor.save();
 
         res.send({ mentor, student });
@@ -111,22 +113,30 @@ app.post('/mentors/:mentorId/students', async (req, res) => {
 
         const mentor = await Mentor.findOne({ mentor_id: mentorId });
 
+        if (!mentor) {
+            return res.status(404).send({ error: 'Mentor not found' });
+        }
+
         for (const studentId of studentIds) {
             const student = await Student.findOne({ student_id: studentId });
+
+            if (!student) {
+                return res.status(404).send({ error: `Student with ID ${studentId} not found` });
+            }
 
             if (student.mentor) {
                 student.previousMentor = student.mentor;
             }
 
-            student.mentor = mentor;
+            student.mentor = mentor._id;
             await student.save();
 
-            mentor.students.push(student);
+            mentor.students.push(student._id);
         }
 
         await mentor.save();
 
-        res.send(entor);
+        res.send(mentor);
     } catch (error) {
         res.status(500).send({ error: error.message });
     }
@@ -139,14 +149,18 @@ app.put('/students/:studentId/mentor/:mentorId', async (req, res) => {
         const student = await Student.findOne({ student_id: studentId });
         const newMentor = await Mentor.findOne({ mentor_id: mentorId });
 
+        if (!student || !newMentor) {
+            return res.status(404).send({ error: 'Student or mentor not found' });
+        }
+
         if (student.mentor) {
             student.previousMentor = student.mentor;
         }
 
-        student.mentor = newMentor;
+        student.mentor = newMentor._id;
         await student.save();
 
-        newMentor.students.push(student);
+        newMentor.students.push(student._id);
         await newMentor.save();
 
         res.send(student);
@@ -160,6 +174,11 @@ app.get('/mentors/:mentorId/students', async (req, res) => {
     try {
         const { mentorId } = req.params;
         const mentor = await Mentor.findOne({ mentor_id: mentorId }).populate('students');
+
+        if (!mentor) {
+            return res.status(404).send({ error: 'Mentor not found' });
+        }
+
         res.send(mentor.students);
     } catch (error) {
         res.status(500).send({ error: error.message });
@@ -171,6 +190,11 @@ app.get('/students/:studentId/previous-mentor', async (req, res) => {
     try {
         const { studentId } = req.params;
         const student = await Student.findOne({ student_id: studentId }).populate('previousMentor');
+
+        if (!student) {
+            return res.status(404).send({ error: 'Student not found' });
+        }
+
         res.send(student.previousMentor);
     } catch (error) {
         res.status(500).send({ error: error.message });
