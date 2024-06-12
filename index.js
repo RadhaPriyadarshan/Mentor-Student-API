@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const cors = require('cors'); 
+require('dotenv').config();
 
 const Mentor = require('./models/Mentor');
 const Student = require('./models/Student');
@@ -10,8 +11,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-const dbURI = 'mongodb+srv://RadhaDarshan:Jagadeesan%23786@mentor-student-database.iqhjlhc.mongodb.net/student_mentor_database?retryWrites=true&w=majority';
-mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log('MongoDB connected'))
     .catch(err => console.log(err));
 
